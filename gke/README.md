@@ -49,6 +49,8 @@ curl https://kots.io/install | bash
 
 ## Deploy GKE Infrastructure with Terraform
 
+This assumes the default configuration with a private cluster behind a bastion host.
+
 1. Configure Google Cloud credentials. You can do this in one of two ways:
     * Set up [user default application credentials]  via `gcloud auth
       application-default login`. You may use the `--project` flag to select a
@@ -57,8 +59,8 @@ GCP project.
       `export GOOGLE_APPLICATION_CREDENTIALS="<path to SAkey.json>"` and then
 activate your service account via `gcloud auth activate-service-account
 --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
-2. Choose a base name 
-    `export BASENAME=<name>`  
+2. Choose a base name
+    `export BASENAME=<name>`
     Suggested `<yourname>-dev`
 3. Navigate to `./gke`
 4. Create a bucket for terraform state `gsutil mb
@@ -77,15 +79,20 @@ and removals.
 10. Once the plan has been verified, run command: `terraform apply` And when
     prompted, confirm the deployment. Deployment time can vary but has
 typically taken approximately ten minutes.
-11. Once deployment is complete, add the new GKE cluster to your local
-    Kubernetes configuration via gcloud by running the following command:
+11. Once deployment is complete, Terraform will display the name of the bastion host and the name and IP of the cluster. You can now connect to your bastion host:
+
+`gcloud compute ssh <bastion-host-name> --project <project-name> --region <region-name>`
+
+The `--project` and `--region` flags can be omitted if `gcloud` the default values configured during initialization can be used. If you have previously used service account credentials, switch back to use your user account credentials before connecting to the bastion: `gcloud auth login`.
+
+You will need to connect to the bastion whenever you need to access the cluster or some of its components.
+
+12. On the bastion, initialize gcloud: `gcloud init`
+
+13. Add the new GKE cluster to the Kubernetes configuration via gcloud by running the following command:
 ```
-gcloud container clusters get-credentials [CLUSTER NAME] \
-     --region [CLUSTER REGION] \
-     --project [CLUSTER PROJECT]
+gcloud container clusters get-credentials [CLUSTER NAME]
 ```
-12. Navigate to "VPC Network" > "Firewall Rules" and update the
-    `allowed-external` rule to include your personal IP.
 13. Verify that the credentials were added by running the following command:
     `kubectl config get-contexts` This should return a list of contexts with an
 asterisk beside the active context.

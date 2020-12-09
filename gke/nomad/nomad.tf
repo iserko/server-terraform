@@ -65,9 +65,15 @@ resource "google_project_iam_member" "nomad_member_service_management" {
   role       = "roles/servicemanagement.admin"
   member     = "serviceAccount:${google_service_account.nomad_service_account.email}"
 }
+resource "google_service_account_iam_member" "nomad_sa_access" {
+  depends_on         = [google_service_account.nomad_service_account]
+  service_account_id = google_service_account.nomad_service_account.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = var.nomad_sa_access
+}
 
 resource "google_compute_instance_template" "nomad_template" {
-  # We've add this wait to ensure that 
+  # We've add this wait to ensure that
   depends_on = [time_sleep.wait_120_seconds]
 
   name_prefix  = "${local.basename}-nomad-template"
@@ -85,6 +91,10 @@ resource "google_compute_instance_template" "nomad_template" {
       cloud_provider = "GCP"
     }
   )
+
+  metadata = {
+    enable-oslogin = "TRUE"
+  }
 
   disk {
     source_image = "ubuntu-os-cloud/ubuntu-1604-lts"
