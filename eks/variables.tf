@@ -24,6 +24,10 @@ variable "k8s_administrators" {
   default = []
 }
 
+variable "k8s_roles" {
+  default = []
+}
+
 variable "force_destroy" {
   default = false
 }
